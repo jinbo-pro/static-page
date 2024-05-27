@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-y/vue/2.6.14/vue.min.js"></script>
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/element-ui/2.15.7/index.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/element-ui/2.15.7/theme-chalk/index.min.css"
+    />
+    <title>浏览器书签快速检索</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      .head_search {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background-color: #fff;
+      }
+      .el-tree-node__content {
+        padding: 8px 0;
+        height: auto;
+      }
+      .custom_node_max {
+        flex-grow: 1;
+      }
+      .url_box {
+        width: 100%;
+        display: flex;
+        align-items: center;
+      }
+      .icon_wapper {
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 20px;
+        flex-shrink: 0;
+      }
+      .icon_wapper i {
+        font-size: 22px;
+        color: #409eff;
+        font-weight: bold;
+      }
+      .url_box img {
+        width: 100%;
+      }
+      .label {
+        font-size: 24px;
+      }
+      .label i {
+        color: #f9d877;
+      }
+      .link_content {
+        cursor: pointer;
+        font-size: 20px;
+        white-space: break-spaces;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <el-card class="head_search">
+        <el-input placeholder="输入关键字进行过滤" v-model="filterText" clearable></el-input>
+        <el-checkbox v-model="searchLast">只搜末级</el-checkbox>
+      </el-card>
+
+      <el-tree ref="tree" :data="list" :filter-node-method="filterNode">
+        <div slot-scope="{ node, data }" class="custom_node_max">
+          <div v-if="data.url" class="url_box" @click="linkPage(data.url)">
+            <div class="icon_wapper">
+              <img v-if="data.icon" :src="data.icon" />
+              <i v-else class="el-icon-link"></i>
+            </div>
+            <div class="link_content" :data-url="data.url">{{ data.label }}</div>
+          </div>
+          <div v-else class="label">
+            <i :class="node.expanded ? 'el-icon-folder-opened' : 'el-icon-folder'"></i>
+            <span>{{ data.label }}</span>
+          </div>
+        </div>
+      </el-tree>
+      <el-backtop></el-backtop>
+    </div>
+    <script>
+      function readDomTree(dom, preLabel) {
+        preLabel = preLabel.replace(',Bookmarks,收藏夹栏', '')
+        const result = Array.from(dom.children).map((item) => {
+          if (item.tagName === 'A') {
+            const label = item.innerText
+            return { url: item.href, icon: item.getAttribute('icon'), label, allLabel: `${preLabel},${label}` }
+          }
+          if (item.tagName === 'DT') return readDomTree(item, preLabel)[0]
+          if (item.tagName === 'DL') {
+            const titleDom = item.previousElementSibling
+            const label = titleDom.innerText
+            const allLabel = `${preLabel},${label}`
+            return { label, allLabel, children: readDomTree(item, allLabel) }
+          }
+          return null
+        })
+        return result.filter((x) => x)
+      }
+      function oneceData(treeList) {
+        let [frist] = treeList
+        if (treeList.length == 1 && frist && frist.children && frist.children.length) {
+          return oneceData(frist.children)
+        } else {
+          return treeList
+        }
+      }
+
+      new Vue({
+        el: '#app',
+        data() {
+          return {
+            list: [],
+            filterText: '',
+            searchLast: false
+          }
+        },
+        watch: {
+          filterText(val) {
+            this.$refs.tree.filter(val)
+          }
+        },
+        created() {
+          this.getBookList().then((res) => {
+            this.list = oneceData(res)
+            console.log(this.list)
+          })
+        },
+        methods: {
+          async getBookList() {
+            const container = document.createElement('div')
+            const res = await fetch('./books.html')
+            container.innerHTML = await res.text()
+            return readDomTree(container, '')
+          },
+          filterNode(value, data) {
+            if (!value) return true
+            const content = (this.searchLast ? data.label : data.allLabel) + data.url
+            return content.toLocaleLowerCase().includes(value)
+          },
+          linkPage(url) {
+            window.open(url)
+          }
+        }
+      })
+    </script>
+  </body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-y/vue/2.6.14/vue.min.js"></script>
+    <script src="https://cdn.staticfile.org/clipboard.js/2.0.11/clipboard.min.js"></script>
+    <script src="./selectData.js"></script>
+    <title>Document</title>
+    <style>
+      .item_box .item_li {
+        padding: 4px;
+        border-radius: 4px;
+        margin-bottom: 4px;
+      }
+      .item_box .item_li:nth-child(odd) {
+        background-color: #f5f5f5;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div v-for="(item, index) in list" :key="index" class="item_box">
+        <h3 :id="`title_${item.title}`">{{ item.title }}</h3>
+        <label v-for="(e, i) in item.data">
+          <div class="item_li" @click="selectItem(item.id)">
+            <input :key="i" type="radio" :name="item.title" :value="e" v-model="item.value" />{{ e }}
+            <br />
+          </div>
+        </label>
+      </div>
+      <button @click="submit">生成</button>
+      <button class="copy-content">复制</button>
+      <pre>{{ result }}</pre>
+    </div>
+    <script>
+      new Vue({
+        el: '#app',
+        data() {
+          return {
+            list: [],
+            result: ''
+          }
+        },
+        created() {
+          for (let item of list) {
+            item.value = ''
+            item.id = `d_${Math.random()}`
+          }
+          this.list = list
+        },
+        mounted() {
+          const clipboard = new ClipboardJS('.copy-content', {
+            text: () => this.result
+          })
+          clipboard.on('success', (e) => {
+            alert('复制成功')
+          })
+        },
+        methods: {
+          selectItem(id) {
+            let curIndex = this.list.findIndex((e) => e.id == id)
+            const next = this.list[curIndex + 1]
+            if (next) {
+              location.href = `#title_${next.title}`
+            }
+          },
+          submit() {
+            console.log(this.list, '-->>> list')
+            const getLi = (list, value) =>
+              list.reduce((p, c) => {
+                p += `${c == value ? '✓' : '☐'} ${c}\n`
+                return p
+              }, '')
+            this.result = this.list.reduce((p, c) => {
+              p += `=======${c.title}=======\n${getLi(c.data, c.value)}\n`
+              return p
+            }, '')
+            console.log(this.result, '-->>> result')
+          }
+        }
+      })
+    </script>
+  </body>
+</html>

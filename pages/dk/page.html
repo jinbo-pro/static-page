@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-y/vue/2.6.14/vue.min.js"></script>
+    <script src="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-y/element-ui/2.15.7/index.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-y/element-ui/2.15.7/theme-chalk/index.min.css"
+    />
+    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-y/echarts/5.3.0/echarts.min.js"></script>
+    <title>贷款计算器</title>
+    <style>
+      .charts_box {
+        width: 100vw;
+        height: 500px;
+      }
+      .jend {
+        padding: 8px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <el-form inline>
+        <el-form-item label="金额（万元）">
+          <el-input-number v-model="formData.total" :step="1" :min="1"></el-input-number>
+        </el-form-item>
+        <el-form-item label="利率（%）">
+          <el-input-number v-model="formData.rate" :precision="2" :step="0.1" :max="10"></el-input-number>
+        </el-form-item>
+        <el-form-item label="贷款年限">
+          <el-select v-model="formData.year" placeholder="请选择贷款年限">
+            <el-option v-for="item in yearList" :key="item.value" :label="item.label" :value="item.value"> </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="onSubmit">计算</el-button>
+        </el-form-item>
+      </el-form>
+
+      <el-tabs type="border-card">
+        <el-tab-pane v-for="(item, key) in rTypeList" :key="key" :label="item.label">
+          <el-descriptions direction="vertical" border>
+            <el-descriptions-item label="还款总额">{{ item.hkze }}</el-descriptions-item>
+            <el-descriptions-item label="利息总额">{{ item.lxze }}</el-descriptions-item>
+            <el-descriptions-item label="每月递减">{{ item.mydj }}</el-descriptions-item>
+          </el-descriptions>
+          <el-divider></el-divider>
+          <el-tabs type="card" v-model="item.activeName">
+            <el-tab-pane label="月视图" name="m">
+              <!-- <div class="jend">
+                <el-button size="mini" @click="exportHandle(`${key}-m`)">导出月视图</el-button>
+              </div> -->
+              <el-table :id="`${key}-m`" :data="item.monthTableData" height="500" border stripe>
+                <el-table-column type="index" width="50" label="期数"></el-table-column>
+                <el-table-column prop="bx" label="每月还款"></el-table-column>
+                <el-table-column prop="ljBx" label="累计还款"></el-table-column>
+                <el-table-column prop="lx" label="每月利息"></el-table-column>
+                <el-table-column prop="ljLx" label="累计利息"></el-table-column>
+                <el-table-column prop="bj" label="每月本金"></el-table-column>
+                <el-table-column prop="ljBj" label="累计本金"></el-table-column>
+                <el-table-column prop="syBj" label="剩余本金"></el-table-column>
+              </el-table>
+            </el-tab-pane>
+            <el-tab-pane label="年视图" name="y">
+              <!-- <div class="jend">
+                <el-button size="mini" @click="exportHandle(`${key}-y`)">导出年视图</el-button>
+              </div> -->
+              <el-table :id="`${key}-y`" :data="item.yearTableData" height="500" border stripe>
+                <el-table-column type="index" width="50" label="年"></el-table-column>
+                <el-table-column prop="bx" label="每年还款"></el-table-column>
+                <el-table-column prop="ljBx" label="累计还款"></el-table-column>
+                <el-table-column prop="lx" label="每年利息"></el-table-column>
+                <el-table-column prop="ljLx" label="累计利息"></el-table-column>
+                <el-table-column prop="bj" label="每年本金"></el-table-column>
+                <el-table-column prop="ljBj" label="累计本金"></el-table-column>
+                <el-table-column prop="syBj" label="剩余本金"></el-table-column>
+              </el-table>
+            </el-tab-pane>
+            <el-tab-pane label="本息对比" name="c">
+              <div :id="key" class="charts_box"></div>
+            </el-tab-pane>
+          </el-tabs>
+        </el-tab-pane>
+        <el-tab-pane label="年还款对比" name="d">
+          <div id="echartsRepaymentContainerMn" class="charts_box"></div>
+          <div id="echartsRepaymentContainerLj" class="charts_box"></div>
+        </el-tab-pane>
+      </el-tabs>
+    </div>
+    <script src="./utils.js"></script>
+    <script src="./charts.js"></script>
+    <script src="./dk-main.js"></script>
+    <!-- export excel -->
+    <!-- <script src="./excelExport.js"></script>
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-y/xlsx/0.18.2/xlsx.mini.min.js"></script>
+    <script src="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-y/xlsx-populate/1.21.0/xlsx-populate.min.js"></script> -->
+  </body>
+</html>
