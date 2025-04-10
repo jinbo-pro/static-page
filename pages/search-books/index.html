@@ -9,6 +9,10 @@
       rel="stylesheet"
       href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/element-ui/2.15.7/theme-chalk/index.min.css"
     />
+    <!-- 本地存储 -->
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-y/localforage/1.10.0/localforage.min.js"></script>
+    <!-- 模糊搜索 -->
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-y/fuse.js/6.5.3/fuse.min.js"></script>
     <title>浏览器书签快速检索</title>
     <style>
       body {
@@ -60,13 +64,28 @@
         font-size: 20px;
         white-space: break-spaces;
       }
+      .foot_handle {
+        padding: 6px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .el-tree-node__expand-icon {
+        font-size: 18px;
+      }
     </style>
   </head>
   <body>
     <div id="app">
       <el-card class="head_search">
         <el-input placeholder="输入关键字进行过滤" v-model="filterText" clearable></el-input>
-        <el-checkbox v-model="searchLast">只搜末级</el-checkbox>
+        <div class="foot_handle">
+          <div>
+            <el-checkbox v-model="allPath">全路径</el-checkbox>
+            <el-checkbox v-model="isBitap">模糊</el-checkbox>
+          </div>
+          <el-button icon="el-icon-refresh" circle size="mini" @click="refreshHandle"></el-button>
+        </div>
       </el-card>
 
       <el-tree ref="tree" :data="list" :filter-node-method="filterNode">
@@ -113,14 +132,18 @@
           return treeList
         }
       }
-
+      const saveKey = 'bookmark_list_save'
+      const db = localforage.createInstance({
+        name: 'bookmarkDb'
+      })
       new Vue({
         el: '#app',
         data() {
           return {
             list: [],
             filterText: '',
-            searchLast: false
+            allPath: true,
+            isBitap: false
           }
         },
         watch: {
@@ -129,25 +152,38 @@
           }
         },
         created() {
-          this.getBookList().then((res) => {
-            this.list = oneceData(res)
-            console.log(this.list)
-          })
+          this.initData()
         },
         methods: {
-          async getBookList() {
-            const container = document.createElement('div')
-            const res = await fetch('./books.html')
-            container.innerHTML = await res.text()
-            return readDomTree(container, '')
+          async initData() {
+            let bookmarkList = await db.getItem(saveKey)
+            if (!bookmarkList) {
+              const res = await fetch('./books.html')
+              const container = document.createElement('div')
+              container.innerHTML = await res.text()
+              bookmarkList = oneceData(readDomTree(container, ''))
+              await db.setItem(saveKey, bookmarkList)
+            }
+            console.log(bookmarkList)
+            this.list = bookmarkList
           },
           filterNode(value, data) {
             if (!value) return true
-            const content = (this.searchLast ? data.label : data.allLabel) + data.url
-            return content.toLocaleLowerCase().includes(value)
+            let content = (this.allPath ? data.allLabel : data.label) + data.url
+            if (this.isBitap) {
+              const f = new Fuse([content, data.url])
+              const result = f.search(value)
+              return result.length > 0
+            } else {
+              return content.toLocaleLowerCase().includes(value)
+            }
           },
           linkPage(url) {
             window.open(url)
+          },
+          refreshHandle() {
+            db.removeItem(saveKey)
+            location.reload()
           }
         }
       })

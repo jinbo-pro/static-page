@@ -86,10 +86,13 @@ function sumYearTableData(list) {
 }
 /**整理数据 */
 function formatTableData(list) {
-  return list.map((item) => {
-    return Object.keys(item).reduce((p, c) => {
-      p[c] = item[c].toFixed(2)
-      return p
-    }, {})
+  return list.map((item, index) => {
+    return Object.keys(item).reduce(
+      (p, c) => {
+        p[c] = item[c].toFixed(2)
+        return p
+      },
+      { index: index + 1 }
+    )
   })
 }
