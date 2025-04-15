@@ -1,0 +1,29 @@
+.DS_Store
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+**/*.log
+
+tests/
+selenium-debug.log
+
+# Editor directories and files
+.idea
+.wrangler
+.history
+.svn
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.local
+
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+dist.tar.gz
+
+# gitignore
